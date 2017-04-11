@@ -1,0 +1,12 @@
+---
+- name: Provision server 
+  hosts: all
+  user: root
+  
+  vars_files:
+   - group_var/all.yml 
+ 
+  roles:
+   - common
+  tasks:
+   - include: roles/common/tasks/mysql.yml

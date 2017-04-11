@@ -1,0 +1,56 @@
+---
+
+
+ - name: Install MySQL on CentOS
+   yum: package={{ item }} state=installed 
+   when: ansible_distribution == "CentOS"
+   with_items:
+     - mysql-server
+     - mysql-client
+     - MySQL-python
+   ignore_errors: yes
+
+ - name: Install MySQL on Ubuntu
+   apt: package={{ item }} state=installed force=yes update_cache=yes cache_valid_time=3600
+   when: ansible_distribution == "Ubuntu"
+   with_items:
+     - mysql-server
+     - mysql-client
+     - python-mysqldb
+   ignore_errors: yes
+ 
+ - name: ensure mysql is running and starts on boot
+   service: name=mysqld state=started enabled=true
+   ignore_errors: yes
+ - name: update mysql root password for all root accounts
+   mysql_user: name=root host=localhost password={{ root_db_password }}
+   ignore_errors: yes
+
+ - name: Set remote file path here
+   set_fact: remote_file_path=/root/.my.cnf 
+ 
+ - name: Create a new file
+   file: path="{{ remote_file_path }}" state=touch
+ - stat: path="{{ remote_file_path }}"
+   register: file_path
+
+ - set_fact: file_content="[client] \n user=root \n password=root"
+
+ - copy: content="{{ file_content }}" dest="{{ remote_file_path }}"
+   when: file_path.stat.exists == true
+
+
+ - name: update mysql root password for all root accounts
+   mysql_user: name=root host={{ item }} password={{ root_db_password }}
+   with_items:
+     - localhost
+     - 127.0.0.1
+     - ::1
+   ignore_errors: yes
+
+
+ - mysql_user:
+    name: {{ MySQL_new_user }}
+    password: {{ MySQL_dev_pass }}
+    priv: '*.*:ALL'
+    state: present

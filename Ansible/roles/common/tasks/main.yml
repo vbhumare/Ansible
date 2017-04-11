@@ -1,0 +1,63 @@
+---
+ - name: Copying sshd_config file on CentOS
+   template: src=sshd_config_centos dest=/etc/ssh/
+   when: ansible_distribution == 'CentOS'
+   ignore_errors: yes
+
+ - name: Copying sshd_config file on Ubuntu
+   template: src=sshd_config_ubuntu dest=/etc/ssh/
+   when: ansible_distribution == 'Ubuntu'
+   ignore_errors: yes
+
+ 
+ - name: Copying adduser.sh file
+   template: src=adduser.sh dest=/tmp/
+ - name: Creating user ========
+   command: sh /tmp/adduser.sh
+   ignore_errors: yes
+
+ - name: Add EPEL repository
+   yum_repository:
+    name: epel
+    description: EPEL YUM repo
+    baseurl: https://download.fedoraproject.org/pub/epel/6/x86_64/
+   ignore_errors: yes
+ - name: install the latest version of Apache on centos
+   yum:
+    name: httpd
+    state: latest
+   when: ansible_distribution == 'CentOS'
+   ignore_errors: yes
+ 
+ - name: Restarting httpd
+   service: name=httpd state=restarted enabled=yes
+   ignore_errors: yes
+
+ - name: Install the latest version of apache2 on Ubuntu
+   apt: name=apache2 update_cache=yes state=latest
+   when: ansible_distribution == 'Ubuntu' 
+   ignore_errors: yes
+
+ - name: Restarting apache2
+   service: name=apache2 state=restarted
+   ignore_errors: yes
+## Creating file 
+
+ - name: Set remote file path here
+   set_fact: remote_file_path=/var/www/html/index.php 
+# Create a blank file
+ - name: Create a new file
+   file: path="{{ remote_file_path }}" state=touch
+# Check remote file
+ - stat: path="{{ remote_file_path }}"
+   register: file_path
+
+# Write file content in file_content variable
+ - set_fact: file_content="<?php \n phpinfo(); \n ?>"
+
+# If file exist then copy content in remote file.
+ - copy: content="{{ file_content }}" dest="{{ remote_file_path }}"
+   when: file_path.stat.exists == true
+
+
+

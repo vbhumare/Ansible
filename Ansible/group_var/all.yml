@@ -1,0 +1,13 @@
+#Variable that are visible from all roles
+
+
+username: deploy
+password: deploy
+
+MySQL_root_pass: root
+
+MySQL_new_user: dev
+
+MySQL_dev_pass: dev
+
+root_db_password: root
